@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .circle {
+      fill: none;
+      stroke: #000;
+      stroke-width: 1;
+    }
+    
+    .centre-circle {
+      fill: black;
+      stroke: none;
+    }
+
+    .text-path {
+      fill: none;
+      stroke: none;
+    }
+
+    .curved-text {
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+    }
+
+    .segment-text {
+      font-size: 14px;
+      font-family: Arial, sans-serif !important;
+    }
+
+    .segment-text.level-6 {
+      font-size: 10px;
+    }
+
+    .centre-text {
+      font-size: 16px;
+      font-family: Arial, sans-serif;
+      text-anchor: middle;
+      dominant-baseline: central;
+      fill: white;
+    }
+
+    .thick-circle {
+      fill: none;
+      stroke: #000;
+      stroke-width: 4;
+    }
+  </style>
+</head>
+<body>
+  <svg id="polar-grid" width="400" height="400"></svg>
+
+  <script>
+    const data = [
+      { level: 'Strings', segments: ['Strings', 'Violin', 'Guitar', 'Cello', 'Harp', 'Viola'] },
+      { level: 'Woodwinds', segments: ['Woodwinds', 'Flute', 'Clarinet', 'Saxophone', 'Oboe', 'Bassoon'] },
+      { level: 'Brass', segments: ['Brass', 'Trumpet', 'French Horn', 'Trombone', 'Tuba', 'Cornet'] },
+      { level: 'Percussion', segments: ['Percussion','Drums', 'Cymbals', 'Xylophone', 'Timpani', 'Marimba'] },
+      { level: 'Keyboards', segments: ['Keyboards','Piano', 'Organ', 'Harpsichord', 'Synthesizer', 'Accordion'] },
+      { level: 'Traditional/World', segments: ['Traditional/World','Sitar', 'Didgeridoo', 'Bagpipes', 'Balalaika', 'Erhu'] }
+    ];
+
+    const centre_text = "Instruments";
+    const highlightCircle = 4;
+    const sliceColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#800080'];
+
+    const scale = 2; // Adjust this value to change the size of the polar grid
+
+    const svgElement = document.getElementById('polar-grid');
+    const centreX = 200 * scale;
+    const centreY = 200 * scale;
+    const numCircles = data[0].segments.length;
+    const numLines = data.length;
+    const maxRadius = 150 * scale;
+    const centreRadius = maxRadius / numCircles;
+
+    svgElement.setAttribute('width', 400 * scale);
+    svgElement.setAttribute('height', 400 * scale);
+
+    // Create the concentric circles and colored slices
+    for (let i = 1; i <= numCircles; i++) {
+      const radius = (i / numCircles) * maxRadius;
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', centreX);
+      circle.setAttribute('cy', centreY);
+      circle.setAttribute('r', radius);
+      circle.setAttribute('class', 'circle');
+      svgElement.appendChild(circle);
+    }
+
+    // Create the radiating lines
+    for (let i = 0; i < numLines; i++) {
+      const angle = (i / numLines) * 2 * Math.PI;
+      const x1 = centreX + centreRadius * Math.sin(angle);
+      const y1 = centreY - centreRadius * Math.cos(angle);
+      const x2 = centreX + maxRadius * Math.sin(angle);
+      const y2 = centreY - maxRadius * Math.cos(angle);
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', x1);
+      line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2);
+      line.setAttribute('y2', y2);
+      line.setAttribute('class', 'line');
+      svgElement.appendChild(line);
+    }
+
+    // Create the colored slices
+    for (let i = 0; i < numCircles; i++) {
+      const radius = ((i + 1) / numCircles) * maxRadius;
+      for (let j = 0; j < numLines; j++) {
+        const startAngle = (j / numLines) * 2 * Math.PI;
+        const endAngle = ((j + 1) / numLines) * 2 * Math.PI;
+        const sliceColor = sliceColors[j % sliceColors.length];
+
+        const slice = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        slice.setAttribute('d', `M ${centreX} ${centreY} L ${centreX + radius * Math.sin(startAngle)} ${centreY - radius * Math.cos(startAngle)} A ${radius} ${radius} 0 0 1 ${centreX + radius * Math.sin(endAngle)} ${centreY - radius * Math.cos(endAngle)} Z`);
+        slice.setAttribute('fill', sliceColor);
+        slice.setAttribute('fill-opacity', 1 - (i / numCircles));
+        svgElement.appendChild(slice);
+      }
+    }
+
+    // Create a black circle to cover the centre
+    const centreCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    centreCircle.setAttribute('cx', centreX);
+    centreCircle.setAttribute('cy', centreY);
+    centreCircle.setAttribute('r', centreRadius);
+    centreCircle.setAttribute('class', 'centre-circle');
+    svgElement.appendChild(centreCircle);
+
+    // Add white text to the centre circle
+    const centreText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    centreText.setAttribute('x', centreX);
+    centreText.setAttribute('y', centreY);
+    centreText.setAttribute('class', 'centre-text');
+    centreText.textContent = centre_text;
+    svgElement.appendChild(centreText);
+
+    // Add a thicker circle around the second to last circle
+    const thickCircleRadius = ((numCircles - highlightCircle) / numCircles) * maxRadius;
+    const thickCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    thickCircle.setAttribute('cx', centreX);
+    thickCircle.setAttribute('cy', centreY);
+    thickCircle.setAttribute('r', thickCircleRadius);
+    thickCircle.setAttribute('class', 'thick-circle');
+    svgElement.appendChild(thickCircle);
+
+    // Add the curved segment text from the data array
+    const segmentAngle = (2 * Math.PI) / numLines;
+    const textOffset = 0.3; // Adjust this value to control the text offset
+
+    data[0].segments.forEach((_, segmentIndex) => {
+      const textRadius = (numCircles - segmentIndex + textOffset) * (maxRadius / numCircles);
+
+      data.forEach((row, rowIndex) => {
+        const segment = row.segments[segmentIndex];
+        const startAngle = segmentAngle * rowIndex;
+        const endAngle = startAngle + segmentAngle;
+        const midAngle = (startAngle + endAngle) / 2;
+
+        const textPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const startX = centreX + textRadius * Math.sin(startAngle);
+        const startY = centreY - textRadius * Math.cos(startAngle);
+        const endX = centreX + textRadius * Math.sin(endAngle);
+        const endY = centreY - textRadius * Math.cos(endAngle);
+        const pathData = `M ${startX} ${startY} A ${textRadius} ${textRadius} 0 0 1 ${endX} ${endY}`;
+        textPath.setAttribute('id', `text-path-${segmentIndex}-${rowIndex}`);
+        textPath.setAttribute('d', pathData);
+        textPath.setAttribute('class', 'text-path');
+        svgElement.appendChild(textPath);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', `segment-text level-${segmentIndex + 1}`);
+        const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'textPath');
+        textElement.setAttribute('href', `#text-path-${segmentIndex}-${rowIndex}`);
+        textElement.setAttribute('startOffset', '50%');
+        textElement.setAttribute('text-anchor', 'middle');
+        textElement.textContent = segment;
+        text.appendChild(textElement);
+        svgElement.appendChild(text);
+      });
+    });
+  </script>
+</body>
+</html>
